@@ -14,6 +14,7 @@ interface Props {
 
 export default function SankeyChartNivoWithSettings({ data, year, breadcrumbsSlot }: Props) {
   const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
+  const [chartKey, setChartKey] = useState(0);
 
   return (
     <div className="space-y-4">
@@ -33,14 +34,15 @@ export default function SankeyChartNivoWithSettings({ data, year, breadcrumbsSlo
         isOpen={isConfigPanelOpen}
         onClose={() => setIsConfigPanelOpen(false)}
         onSaved={() => {
-          // 設定保存後、チャートを再描画するために何もしない（自動的に反映される）
+          // 設定保存後、チャートを強制的に再マウントして即座に反映
+          setChartKey(prev => prev + 1);
         }}
         showProjectSettings={false}
         showMinistryThreshold={false}
       />
 
       {/* Sankey Chart */}
-      <SankeyChartNivo data={data} year={year} />
+      <SankeyChartNivo key={chartKey} data={data} year={year} />
     </div>
   );
 }

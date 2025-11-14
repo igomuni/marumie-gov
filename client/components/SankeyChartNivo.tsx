@@ -17,6 +17,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
   const { config, isLoaded } = useSankeyConfig();
   const [nivoData, setNivoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     nodeId: string;
@@ -90,6 +91,17 @@ export default function SankeyChartNivo({ data, year }: Props) {
     loadMinistries();
   }, [year, data]);
 
+  // スマホ判定
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // ノードクリックハンドラー
   const handleNodeClick = (node: any) => {
     const originalNode = data.nodes.find((n) => n.id === node.id);
@@ -108,12 +120,20 @@ export default function SankeyChartNivo({ data, year }: Props) {
     return <div className="flex items-center justify-center h-[600px]">読み込み中...</div>;
   }
 
+  // スマホ用のマージン設定
+  const chartMargin = isMobile
+    ? { top: 20, right: 80, bottom: 20, left: 80 }
+    : { top: 40, right: 160, bottom: 40, left: 160 };
+
+  // スマホ用のラベルパディング
+  const labelPaddingValue = isMobile ? 8 : 16;
+
   return (
     <>
       <div className="h-[600px] w-full">
         <ResponsiveSankey
           data={nivoData}
-          margin={{ top: 40, right: 160, bottom: 40, left: 160 }}
+          margin={chartMargin}
           align="center"
           colors={(node: any) => node.nodeColor}
           onClick={(node: any) => handleNodeClick(node)}
@@ -133,10 +153,18 @@ export default function SankeyChartNivo({ data, year }: Props) {
         enableLinkGradient={true}
         labelPosition="outside"
         labelOrientation="horizontal"
-        labelPadding={16}
+        labelPadding={labelPaddingValue}
         labelTextColor={{
           from: 'color',
           modifiers: [['darker', 1]],
+        }}
+        theme={{
+          labels: {
+            text: {
+              fontSize: isMobile ? 10 : 12,
+              fontWeight: isMobile ? 600 : 400,
+            },
+          },
         }}
         // カスタムラベル（nivoDataから取得）
         label={(node) => {

@@ -47,6 +47,13 @@ export default function SankeyNodeDetailModal({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [projectNameFilter, setProjectNameFilter] = useState('');
   const [expenditureNameFilter, setExpenditureNameFilter] = useState('');
+  // スマホでは初期状態を折り畳み、PCでは展開
+  const [isFilterExpanded, setIsFilterExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
 
   // ノードタイプに応じた初期設定
   useEffect(() => {
@@ -323,10 +330,24 @@ export default function SankeyNodeDetailModal({
         </div>
 
         {/* フィルタ設定 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col gap-3">
-            {/* 1行目: 府省庁フィルタと支出先まとめチェックボックス */}
-            <div className="flex items-center gap-3 flex-wrap">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          {/* 折り畳みヘッダー */}
+          <button
+            onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+            className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <span className="font-medium text-gray-900 dark:text-white">フィルタ設定</span>
+            <span className="text-gray-500 dark:text-gray-400 text-lg">
+              {isFilterExpanded ? '▼' : '▶'}
+            </span>
+          </button>
+
+          {/* フィルタコンテンツ */}
+          {isFilterExpanded && (
+            <div className="px-4 pb-4">
+              <div className="flex flex-col gap-3">
+                {/* 1行目: 府省庁フィルタと支出先まとめチェックボックス */}
+                <div className="flex items-center gap-3 flex-wrap">
               {/* 府省庁フィルタ（カスタムドロップダウン） */}
               <div className="w-64 relative" ref={dropdownRef}>
                 <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">府省庁</label>
@@ -411,8 +432,10 @@ export default function SankeyNodeDetailModal({
                   className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* データテーブル */}
