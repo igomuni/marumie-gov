@@ -1,0 +1,67 @@
+# GitHub Issue/PR ラベル定義
+# gh label コマンドで一括作成可能: gh label create -R owner/repo label-name --color color --description "description"
+
+labels:
+  # 種類
+  - name: bug
+    color: d73a4a
+    description: バグや不具合
+
+  - name: enhancement
+    color: a2eeef
+    description: 新機能や改善
+
+  - name: task
+    color: 0e8a16
+    description: 開発タスク
+
+  - name: documentation
+    color: 0075ca
+    description: ドキュメント関連
+
+  - name: refactoring
+    color: fbca04
+    description: リファクタリング
+
+  # 優先度
+  - name: priority/high
+    color: b60205
+    description: 優先度：高
+
+  - name: priority/medium
+    color: fbca04
+    description: 優先度：中
+
+  - name: priority/low
+    color: 0e8a16
+    description: 優先度：低
+
+  # ステータス
+  - name: wip
+    color: f9d0c4
+    description: 作業中
+
+  - name: ready for review
+    color: 0e8a16
+    description: レビュー待ち
+
+  - name: on hold
+    color: d4c5f9
+    description: 保留中
+
+  # カテゴリ
+  - name: ui/ux
+    color: c5def5
+    description: UI/UX関連
+
+  - name: performance
+    color: 5319e7
+    description: パフォーマンス関連
+
+  - name: mobile
+    color: ff69b4
+    description: モバイル対応
+
+  - name: accessibility
+    color: 006b75
+    description: アクセシビリティ
