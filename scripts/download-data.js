@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const RELEASE_URL = 'https://github.com/igomuni/rs_system_pipeline_marumie/releases/download/v1.0.0/projects_data.tar.gz';
+const RELEASE_URL = 'https://github.com/igomuni/marumie-gov/releases/download/v1.0.0/projects_data.tar.gz';
 const DOWNLOAD_PATH = path.join(process.cwd(), 'projects_data.tar.gz');
 const PROJECTS_DIR = path.join(process.cwd(), 'public', 'data', 'projects');
 
