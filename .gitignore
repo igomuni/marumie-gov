@@ -53,3 +53,6 @@ next-env.d.ts
 # Generated project files (too many to commit, generated during build)
 public/data/projects/
 *.tar.gz
+
+# --- IGNORE ---
+docs/*ignore*
