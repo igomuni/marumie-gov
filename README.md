@@ -18,7 +18,8 @@
 - 支出先Top10リスト表示
 
 **パフォーマンス最適化**
-- ビルド時にデータを事前処理し、JSONとして最適化（80MB→112KB、約700倍の削減）
+- ビルド時にデータを事前処理し、JSONとして最適化
+- データをtar.gz形式で圧縮管理（176MB → 23MB、約87%削減）
 - クライアント側での動的データロード
 
 ## 技術スタック
@@ -68,19 +69,19 @@ marumie-gov/
 git clone https://github.com/igomuni/marumie-gov.git
 cd marumie-gov
 npm install
-npm run download-data  # データ取得
+npm run extract-data   # データ展開（public_data.tar.gz → public/data/）
 npm run dev            # 開発サーバー起動
 ```
 
 **利用可能なコマンド**:
 ```bash
 npm run dev            # 開発サーバー起動（http://localhost:3000）
-npm run build          # 本番ビルド（データダウンロード含む）
+npm run build          # 本番ビルド（データ展開 + ビルド）
 npm start              # 本番サーバー起動
 npm run lint           # ESLint実行
 npm run typecheck      # TypeScriptの型チェック
-npm run preprocess     # データ前処理のみ実行
-npm run download-data  # データダウンロードのみ実行
+npm run extract-data   # データ展開のみ実行
+npm run preprocess     # データ前処理（開発用）
 ```
 
 ## 使用方法

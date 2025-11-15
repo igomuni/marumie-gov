@@ -1,15 +1,15 @@
 {
-  "name": "rs_system_pipeline_marumie",
+  "name": "marumie-gov",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run download-data && next build",
+    "build": "npm run extract-data && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "preprocess": "tsx scripts/preprocess-data.ts",
-    "download-data": "node scripts/download-data.js"
+    "extract-data": "node scripts/extract-data.js"
   },
   "dependencies": {
     "@nivo/sankey": "^0.99.0",
