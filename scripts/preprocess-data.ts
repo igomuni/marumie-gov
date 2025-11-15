@@ -651,7 +651,7 @@ function generate4ColumnTopologyBasedSankeyData(
   const currentYearExpenditureData = expenditureData.filter((exp) => exp.事業年度 === year);
 
   // 府省庁ごとの予算・支出を集計
-  const ministryData = new Map<string, { budget: number; execution: number }>();
+  const ministryData = new Map<string, { budget: number; expenditure: number }>();
 
   // 予算データから予算金額を集計
   currentYearBudgetData.forEach((budget) => {
@@ -664,7 +664,7 @@ function generate4ColumnTopologyBasedSankeyData(
     );
 
     if (!ministryData.has(ministry)) {
-      ministryData.set(ministry, { budget: 0, execution: 0 });
+      ministryData.set(ministry, { budget: 0, expenditure: 0 });
     }
     const data = ministryData.get(ministry)!;
     data.budget += budgetAmount;
@@ -712,19 +712,19 @@ function generate4ColumnTopologyBasedSankeyData(
   projectExpenditures.forEach((project) => {
     const ministry = project.ministry;
     if (!ministryData.has(ministry)) {
-      ministryData.set(ministry, { budget: 0, execution: 0 });
+      ministryData.set(ministry, { budget: 0, expenditure: 0 });
     }
 
-    const totalProjectExecution = Array.from(project.expenditures.values()).reduce((sum, amount) => sum + amount, 0);
-    ministryData.get(ministry)!.execution += totalProjectExecution;
+    const totalProjectExpenditure = Array.from(project.expenditures.values()).reduce((sum, amount) => sum + amount, 0);
+    ministryData.get(ministry)!.expenditure += totalProjectExpenditure;
   });
 
   // 総予算・総支出を計算
   let totalBudget = 0;
-  let totalExecution = 0;
+  let totalExpenditure = 0;
   for (const data of ministryData.values()) {
     totalBudget += data.budget;
-    totalExecution += data.execution;
+    totalExpenditure += data.expenditure;
   }
 
   // Top10府省庁を選定（予算額でソート）
@@ -746,7 +746,7 @@ function generate4ColumnTopologyBasedSankeyData(
       metadata: {
         ministry,
         budget: data.budget,
-        execution: data.execution,
+        expenditure: data.expenditure,
       },
     });
   });
@@ -754,11 +754,11 @@ function generate4ColumnTopologyBasedSankeyData(
   // その他府省庁ノード（予算）
   if (otherMinistries.length > 0) {
     const othersBudget = otherMinistries.reduce((sum, [, data]) => sum + data.budget, 0);
-    const othersExecution = otherMinistries.reduce((sum, [, data]) => sum + data.execution, 0);
+    const othersExpenditure = otherMinistries.reduce((sum, [, data]) => sum + data.expenditure, 0);
     const ministryList = otherMinistries.map(([ministry, data]) => ({
       name: ministry,
       budget: data.budget,
-      execution: data.execution,
+      expenditure: data.expenditure,
     }));
 
     nodes.push({
@@ -768,7 +768,7 @@ function generate4ColumnTopologyBasedSankeyData(
       metadata: {
         ministry: 'その他府省庁',
         budget: othersBudget,
-        execution: othersExecution,
+        expenditure: othersExpenditure,
         ministryList,
       },
     });
@@ -804,22 +804,22 @@ function generate4ColumnTopologyBasedSankeyData(
   }
 
   // 列2(depth=2): 支出総計ノード
-  const executionTotalNodeId = 'total_execution';
+  const expenditureTotalNodeId = 'total_expenditure';
   nodes.push({
-    id: executionTotalNodeId,
+    id: expenditureTotalNodeId,
     name: `支出総計`,
     type: 'total',
     metadata: {
-      execution: totalExecution,
+      expenditure: totalExpenditure,
     },
   });
 
   // 差額処理
-  const difference = Math.abs(totalBudget - totalExecution);
-  const threshold = Math.max(totalBudget, totalExecution) * 0.001; // 0.1%
+  const difference = Math.abs(totalBudget - totalExpenditure);
+  const threshold = Math.max(totalBudget, totalExpenditure) * 0.001; // 0.1%
 
   if (difference > threshold) {
-    if (totalBudget > totalExecution) {
+    if (totalBudget > totalExpenditure) {
       // 予算超過: 予算総計 → 支出総計 → 差額ノード
       const differenceNodeId = 'difference_budget_excess';
 
@@ -831,7 +831,7 @@ function generate4ColumnTopologyBasedSankeyData(
         metadata: {
           differenceData: {
             budgetTotal: totalBudget,
-            executionTotal: totalExecution,
+            expenditureTotal: totalExpenditure,
             difference,
             direction: 'budget-excess',
           },
@@ -841,8 +841,8 @@ function generate4ColumnTopologyBasedSankeyData(
       // 予算総計 → 支出総計（支出相当額）
       links.push({
         source: budgetTotalNodeId,
-        target: executionTotalNodeId,
-        value: totalExecution,
+        target: expenditureTotalNodeId,
+        value: totalExpenditure,
       });
 
       // 支出総計 → 差額ノード（depth=2から3へ、実際には横並び）
@@ -855,7 +855,7 @@ function generate4ColumnTopologyBasedSankeyData(
       });
     } else {
       // 支出超過: 差額ノード → 予算総計 → 支出総計
-      const differenceNodeId = 'difference_execution_excess';
+      const differenceNodeId = 'difference_expenditure_excess';
 
       nodes.push({
         id: differenceNodeId,
@@ -864,9 +864,9 @@ function generate4ColumnTopologyBasedSankeyData(
         metadata: {
           differenceData: {
             budgetTotal: totalBudget,
-            executionTotal: totalExecution,
+            expenditureTotal: totalExpenditure,
             difference,
-            direction: 'execution-excess',
+            direction: 'expenditure-excess',
           },
         },
       });
@@ -874,81 +874,81 @@ function generate4ColumnTopologyBasedSankeyData(
       // 予算総計 → 支出総計（予算相当額）
       links.push({
         source: budgetTotalNodeId,
-        target: executionTotalNodeId,
+        target: expenditureTotalNodeId,
         value: totalBudget,
       });
 
       // 差額ノード → 支出総計（depth=1に配置）
       links.push({
         source: differenceNodeId,
-        target: executionTotalNodeId,
+        target: expenditureTotalNodeId,
         value: difference,
       });
     }
   } else {
     // 差額が閾値以下: 予算総計 → 支出総計の直接リンク
-    const flowValue = Math.min(totalBudget, totalExecution);
+    const flowValue = Math.min(totalBudget, totalExpenditure);
     links.push({
       source: budgetTotalNodeId,
-      target: executionTotalNodeId,
+      target: expenditureTotalNodeId,
       value: flowValue,
     });
   }
 
   // 列3(depth=3): Top府省庁別支出合計ノード（支出額でソート）
-  const sortedMinistriesByExecution = Array.from(ministryData.entries()).sort(
-    ([, a], [, b]) => b.execution - a.execution
+  const sortedMinistriesByExpenditure = Array.from(ministryData.entries()).sort(
+    ([, a], [, b]) => b.expenditure - a.expenditure
   );
-  const topMinistriesByExecution = sortedMinistriesByExecution.slice(0, topNMinistries);
-  const otherMinistriesByExecution = sortedMinistriesByExecution.slice(topNMinistries);
+  const topMinistriesByExpenditure = sortedMinistriesByExpenditure.slice(0, topNMinistries);
+  const otherMinistriesByExpenditure = sortedMinistriesByExpenditure.slice(topNMinistries);
 
-  topMinistriesByExecution.forEach(([ministry, data]) => {
-    const ministryNodeId = `ministry_execution_${ministry}`;
+  topMinistriesByExpenditure.forEach(([ministry, data]) => {
+    const ministryNodeId = `ministry_expenditure_${ministry}`;
     nodes.push({
       id: ministryNodeId,
       name: ministry,
       type: 'ministry',
       metadata: {
         ministry,
-        execution: data.execution,
+        expenditure: data.expenditure,
         budget: data.budget,
       },
     });
 
     // 列2 → 列3のリンク（支出総計 → 府省庁）
     links.push({
-      source: executionTotalNodeId,
+      source: expenditureTotalNodeId,
       target: ministryNodeId,
-      value: data.execution,
+      value: data.expenditure,
     });
   });
 
   // その他府省庁ノード（支出）
-  if (otherMinistriesByExecution.length > 0) {
-    const othersExecution = otherMinistriesByExecution.reduce((sum, [, data]) => sum + data.execution, 0);
-    const othersBudget = otherMinistriesByExecution.reduce((sum, [, data]) => sum + data.budget, 0);
-    const ministryList = otherMinistriesByExecution.map(([ministry, data]) => ({
+  if (otherMinistriesByExpenditure.length > 0) {
+    const othersExpenditure = otherMinistriesByExpenditure.reduce((sum, [, data]) => sum + data.expenditure, 0);
+    const othersBudget = otherMinistriesByExpenditure.reduce((sum, [, data]) => sum + data.budget, 0);
+    const ministryList = otherMinistriesByExpenditure.map(([ministry, data]) => ({
       name: ministry,
       budget: data.budget,
-      execution: data.execution,
+      expenditure: data.expenditure,
     }));
 
     nodes.push({
-      id: 'ministry_others_execution',
-      name: `その他${otherMinistriesByExecution.length}府省庁`,
+      id: 'ministry_others_expenditure',
+      name: `その他${otherMinistriesByExpenditure.length}府省庁`,
       type: 'others',
       metadata: {
         ministry: 'その他府省庁',
-        execution: othersExecution,
+        expenditure: othersExpenditure,
         budget: othersBudget,
         ministryList,
       },
     });
 
     links.push({
-      source: executionTotalNodeId,
-      target: 'ministry_others_execution',
-      value: othersExecution,
+      source: expenditureTotalNodeId,
+      target: 'ministry_others_expenditure',
+      value: othersExpenditure,
     });
   }
 

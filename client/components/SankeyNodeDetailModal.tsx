@@ -16,6 +16,7 @@ interface Props {
 }
 
 interface ExpenditureDetail {
+  projectId: number;
   ministry: string;
   projectName: string;
   expenditureName: string;
@@ -100,6 +101,7 @@ export default function SankeyNodeDetailModal({
           if (groupByProject) {
             // 事業名でまとめる
             details.push({
+              projectId: project.projectId,
               ministry: project.ministry,
               projectName: project.projectName,
               expenditureName: '', // まとめる場合は空
@@ -112,6 +114,7 @@ export default function SankeyNodeDetailModal({
             if (project.expenditures) {
               for (const exp of project.expenditures) {
                 details.push({
+                  projectId: project.projectId,
                   ministry: project.ministry,
                   projectName: project.projectName,
                   expenditureName: exp.name,
@@ -277,7 +280,7 @@ export default function SankeyNodeDetailModal({
 
   // フィルター後統計
   const filteredStatistics = useMemo(() => {
-    const uniqueProjects = new Set(data.map((d) => d.projectName));
+    const uniqueProjects = new Set(data.map((d) => d.projectId));
     const totalBudget = data.reduce((sum, d) => sum + d.budget, 0);
     const totalExecution = data.reduce((sum, d) => sum + d.execution, 0);
     const expenditureCount = groupByProject
