@@ -87,7 +87,7 @@ export default function SankeyNodeDetailModal({
       setLoading(true);
       try {
         // 年度ごとの全プロジェクトの支出先データを読み込み
-        const response = await fetch(`/data/year_${year}/yearly-project-expenditures.json`);
+        const response = await fetch(`/data/year_${year}/project-expenditures.json`);
         const yearlyExpenditures = await response.json();
 
         // データを展開
@@ -234,7 +234,7 @@ export default function SankeyNodeDetailModal({
 
   // ドロップダウン表示テキスト
   const getDropdownDisplayText = () => {
-    if (selectedMinistries.length === 0) return 'すべて';
+    if (selectedMinistries.length === 0) return '表示対象なし';
     if (selectedMinistries.length === 1) return selectedMinistries[0];
     return `選択中 (${selectedMinistries.length}/${availableMinistries.length})`;
   };
@@ -248,7 +248,7 @@ export default function SankeyNodeDetailModal({
 
     async function loadAllData() {
       try {
-        const response = await fetch(`/data/year_${year}/yearly-project-expenditures.json`);
+        const response = await fetch(`/data/year_${year}/project-expenditures.json`);
         const data = await response.json();
         setAllYearlyData(data);
       } catch (error) {

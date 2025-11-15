@@ -38,21 +38,21 @@ export default async function YearPage({ params }: Props) {
     loadPreprocessedStatistics(year),
   ]);
 
-  // yearly-project-expenditures.jsonから総支出と支出先数を計算
+  // project-expenditures.jsonから総支出と支出先数を計算
   const fs = require('fs').promises;
   const path = require('path');
-  const yearlyExpendituresPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'yearly-project-expenditures.json');
+  const projectExpendituresPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'project-expenditures.json');
   let totalExpenditure = 0;
   let expenditureCount = 0;
 
   try {
-    const yearlyExpendituresData = await fs.readFile(yearlyExpendituresPath, 'utf-8');
-    const yearlyExpenditures = JSON.parse(yearlyExpendituresData);
-    const projects = Object.values(yearlyExpenditures) as any[];
+    const projectExpendituresData = await fs.readFile(projectExpendituresPath, 'utf-8');
+    const projectExpenditures = JSON.parse(projectExpendituresData);
+    const projects = Object.values(projectExpenditures) as any[];
     totalExpenditure = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
     expenditureCount = projects.reduce((sum, p) => sum + (p.expenditures?.length || 0), 0);
   } catch (error) {
-    console.error('Failed to load yearly-project-expenditures.json:', error);
+    console.error('Failed to load project-expenditures.json:', error);
   }
 
   return (
