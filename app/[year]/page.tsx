@@ -8,6 +8,8 @@ import {
 } from '@/server/loaders/json-data-loader';
 import YearSelector from '@/client/components/YearSelector';
 import YearPageClient from '@/client/components/YearPageClient';
+import fs from 'fs/promises';
+import path from 'path';
 
 interface Props {
   params: Promise<{
@@ -39,16 +41,17 @@ export default async function YearPage({ params }: Props) {
   ]);
 
   // project-spendings.jsonから総支出と支出先数を計算
-  const fs = require('fs').promises;
-  const path = require('path');
   const projectSpendingsPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'project-spendings.json');
   let totalSpending = 0;
   let spendingCount = 0;
 
   try {
     const projectSpendingsData = await fs.readFile(projectSpendingsPath, 'utf-8');
-    const projectSpendings = JSON.parse(projectSpendingsData);
-    const projects = Object.values(projectSpendings) as any[];
+    const projectSpendings = JSON.parse(projectSpendingsData) as Record<string, {
+      totalExecution?: number;
+      spendings?: unknown[];
+    }>;
+    const projects = Object.values(projectSpendings);
     totalSpending = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
     spendingCount = projects.reduce((sum, p) => sum + (p.spendings?.length || 0), 0);
   } catch (error) {
