@@ -8,6 +8,8 @@ import {
 } from '@/server/loaders/json-data-loader';
 import YearSelector from '@/client/components/YearSelector';
 import YearPageClient from '@/client/components/YearPageClient';
+import fs from 'fs/promises';
+import path from 'path';
 
 interface Props {
   params: Promise<{
@@ -38,14 +40,32 @@ export default async function YearPage({ params }: Props) {
     loadPreprocessedStatistics(year),
   ]);
 
+  // project-spendings.jsonから総支出と支出先数を計算
+  const projectSpendingsPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'project-spendings.json');
+  let totalSpending = 0;
+  let spendingCount = 0;
+
+  try {
+    const projectSpendingsData = await fs.readFile(projectSpendingsPath, 'utf-8');
+    const projectSpendings = JSON.parse(projectSpendingsData) as Record<string, {
+      totalExecution?: number;
+      spendings?: unknown[];
+    }>;
+    const projects = Object.values(projectSpendings);
+    totalSpending = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
+    spendingCount = projects.reduce((sum, p) => sum + (p.spendings?.length || 0), 0);
+  } catch (error) {
+    console.error('Failed to load project-spendings.json:', error);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-base sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
                 行政事業レビュー
               </h1>
               <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
@@ -58,22 +78,18 @@ export default async function YearPage({ params }: Props) {
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600 dark:text-gray-400">執行額:</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">総支出:</span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
+                  {(totalSpending / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
-              {year === 2024 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">
-                    {(statistics.averageExecutionRate * 100).toFixed(1)}%
-                  </span>
-                </div>
-              )}
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount}</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600 dark:text-gray-400">支出先数:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{spendingCount.toLocaleString()}</span>
               </div>
             </div>
           </div>

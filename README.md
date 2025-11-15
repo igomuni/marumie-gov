@@ -19,7 +19,7 @@
 
 **パフォーマンス最適化**
 - ビルド時にデータを事前処理し、JSONとして最適化
-- データをtar.gz形式で圧縮管理（176MB → 23MB、約87%削減）
+- データをtar.gz形式で圧縮管理（127MB → 15MB、約88%削減）
 - クライアント側での動的データロード
 
 ## 技術スタック
@@ -45,18 +45,38 @@ marumie-gov/
 ├── client/                        # クライアントコンポーネント
 │   ├── components/                # UIコンポーネント
 │   │   ├── reports/               # レポート関連コンポーネント
+│   │   │   ├── SpendingTopList.tsx
+│   │   │   ├── SpendingTimeSeriesChart.tsx
+│   │   │   └── ...
 │   │   ├── SankeyChartNivo.tsx
-│   │   ├── SankeyChartNivoWithSettings.tsx
+│   │   ├── SankeyNodeDetailModal.tsx
 │   │   └── ...
 │   ├── hooks/                     # カスタムReactフック
 │   └── lib/                       # クライアント用ユーティリティ
+│       ├── spendingLoader.ts      # 支出先データローダー
+│       ├── formatBudget.ts        # 金額フォーマット
+│       └── ...
 ├── server/                        # サーバーサイドロジック
 │   ├── lib/                       # サーバー用ユーティリティ
 │   ├── loaders/                   # データローダー
 │   └── repositories/              # データリポジトリ
+│       ├── json-repository.ts     # JSON データアクセス
+│       └── csv-repository.ts      # CSV データアクセス
 ├── types/                         # TypeScript型定義
+│   ├── sankey.ts                  # サンキー図関連の型
+│   ├── report.ts                  # レポート関連の型
+│   └── rs-system.ts               # 行政事業レビューの型
 ├── scripts/                       # ビルド・前処理スクリプト
+│   └── preprocess-data.ts         # データ前処理スクリプト
 ├── public/                        # 静的ファイル
+│   └── data/                      # 事前処理済みJSONデータ
+│       ├── year_2014/
+│       │   ├── sankey-main.json
+│       │   ├── project-spendings.json
+│       │   └── statistics.json
+│       └── ...
+├── data/                          # 元データ（CSVファイル）
+│   └── rs_system/
 └── docs/                          # ドキュメント
 ```
 

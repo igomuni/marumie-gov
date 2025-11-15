@@ -36,7 +36,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
   useEffect(() => {
     async function loadNivoData() {
       try {
-        const response = await fetch(`/data/year_${year}/sankey-main-topology-nivo.json`);
+        const response = await fetch(`/data/year_${year}/sankey-main.json`);
         const jsonData = await response.json();
 
         // ノードに色を設定

@@ -77,7 +77,7 @@ export interface BudgetSummary {
 }
 
 // 5-1_支出先_支出情報.csv
-export interface ExpenditureInfo {
+export interface SpendingInfo {
   シート種別: string;
   事業年度: number;
   予算事業ID: number;
@@ -113,7 +113,7 @@ export interface ExpenditureInfo {
 }
 
 // 5-2_支出先_支出ブロックのつながり.csv
-export interface ExpenditureConnection {
+export interface SpendingConnection {
   シート種別: string;
   事業年度: number;
   予算事業ID: number;

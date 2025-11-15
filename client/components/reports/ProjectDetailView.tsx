@@ -5,8 +5,8 @@ import type { ProjectTimeSeriesData } from '@/types/report';
 import type { Year } from '@/types/rs-system';
 import { RECOMMENDED_YEARS } from '@/types/rs-system';
 import { BudgetTrendChart } from './BudgetTrendChart';
-import { ExpenditureTopList } from './ExpenditureTopList';
-import { ExpenditureTimeSeriesChart } from './ExpenditureTimeSeriesChart';
+import { SpendingTopList } from './SpendingTopList';
+import { SpendingTimeSeriesChart } from './SpendingTimeSeriesChart';
 
 interface ProjectDetailViewProps {
   projectData: ProjectTimeSeriesData;
@@ -44,14 +44,14 @@ export function ProjectDetailView({ projectData }: ProjectDetailViewProps) {
     });
 
     // 支出先データを年度範囲でフィルタリング・再集計
-    const expenditureMap = new Map<string, {
+    const spendingMap = new Map<string, {
       name: string;
       totalAmount: number;
       yearCount: number;
       yearlyAmounts: Record<number, number>;
     }>();
 
-    projectData.topExpenditures.forEach((exp) => {
+    projectData.topSpendings.forEach((exp) => {
       let totalAmount = 0;
       let yearCount = 0;
       const yearlyAmounts: Record<number, number> = {};
@@ -66,7 +66,7 @@ export function ProjectDetailView({ projectData }: ProjectDetailViewProps) {
       });
 
       if (totalAmount > 0) {
-        expenditureMap.set(exp.name, {
+        spendingMap.set(exp.name, {
           name: exp.name,
           totalAmount,
           yearCount,
@@ -76,14 +76,14 @@ export function ProjectDetailView({ projectData }: ProjectDetailViewProps) {
     });
 
     // Top10を抽出（金額降順）
-    const filteredExpenditures = Array.from(expenditureMap.values())
+    const filteredSpendings = Array.from(spendingMap.values())
       .sort((a, b) => b.totalAmount - a.totalAmount)
       .slice(0, 10);
 
     return {
       ...projectData,
       yearlyData: filteredYearlyData,
-      topExpenditures: filteredExpenditures,
+      topSpendings: filteredSpendings,
     };
   }, [projectData, allYears, yearRangeStart, yearRangeEnd]);
 
@@ -194,12 +194,12 @@ export function ProjectDetailView({ projectData }: ProjectDetailViewProps) {
       <BudgetTrendChart data={filteredData} />
 
       {/* 支出先Top10 */}
-      <ExpenditureTopList expenditures={filteredData.topExpenditures} />
+      <SpendingTopList spendings={filteredData.topSpendings} />
 
       {/* 支出先別推移グラフ */}
-      {filteredData.topExpenditures.length > 0 && (
-        <ExpenditureTimeSeriesChart
-          expenditures={filteredData.topExpenditures}
+      {filteredData.topSpendings.length > 0 && (
+        <SpendingTimeSeriesChart
+          spendings={filteredData.topSpendings}
         />
       )}
     </div>
