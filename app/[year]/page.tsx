@@ -63,6 +63,14 @@ export default async function YearPage({ params }: Props) {
                   {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
+              {statistics.totalExpenditure && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">総支出:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
+                    {(statistics.totalExpenditure / 1000000000000).toFixed(1)}兆円
+                  </span>
+                </div>
+              )}
               {year === 2024 && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
@@ -73,8 +81,14 @@ export default async function YearPage({ params }: Props) {
               )}
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount}</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount.toLocaleString()}</span>
               </div>
+              {statistics.projectsWithExpenditures !== undefined && (
+                <div className="flex items-center gap-1" title={`支出先データあり: ${statistics.projectsWithExpenditures.toLocaleString()} / 支出先データなし: ${statistics.projectsWithoutExpenditures?.toLocaleString() || 0}`}>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">支出先数:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.expenditureCount?.toLocaleString() || 0}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

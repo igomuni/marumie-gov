@@ -1196,7 +1196,26 @@ function generateProjectExpendituresData(budgetData: any[], expenditureData: any
     project.othersTotal = othersTotal;
     project.totalExpenditureAmount = totalExpenditureAmount;
     project.unknownAmount = unknownAmount;
+    project.hasExpenditures = project.expenditures.length > 0;
+    project.expenditureCount = project.expenditures.length;
     delete project.expenditures;
+  });
+
+  // 支出先データがない事業も追加
+  allProjects.forEach((projectInfo, projectId) => {
+    if (!result[projectId]) {
+      result[projectId] = {
+        projectId,
+        projectName: projectInfo.name,
+        budget: projectInfo.budget,
+        top20Expenditures: [],
+        othersTotal: 0,
+        totalExpenditureAmount: 0,
+        unknownAmount: projectInfo.budget,
+        hasExpenditures: false,
+        expenditureCount: 0,
+      };
+    }
   });
 
   return result;
