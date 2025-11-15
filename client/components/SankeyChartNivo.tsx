@@ -173,7 +173,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
 
           // ノードタイプに応じたラベル
           if (originalNode.type === 'total') {
-            const value = originalNode.metadata?.budget || originalNode.metadata?.execution || 0;
+            const value = originalNode.metadata?.budget || originalNode.metadata?.spending || 0;
             return `${originalNode.name}\n${formatBudget(value)}`;
           }
 
@@ -184,9 +184,9 @@ export default function SankeyChartNivo({ data, year }: Props) {
 
           if (originalNode.type === 'ministry') {
             const budget = originalNode.metadata?.budget || 0;
-            const execution = originalNode.metadata?.execution || 0;
-            // 支出ノード（ministry_execution_*）の場合は支出金額を優先
-            const value = originalNode.id.includes('execution') ? execution : budget;
+            const spending = originalNode.metadata?.spending || 0;
+            // 支出ノード（ministry_spending_*）の場合は支出金額を優先
+            const value = originalNode.id.includes('spending') ? spending : budget;
             return `${originalNode.name}\n${formatBudget(value)}`;
           }
 
@@ -203,13 +203,13 @@ export default function SankeyChartNivo({ data, year }: Props) {
               {originalNode.metadata?.budget && (
                 <div className="whitespace-nowrap">予算: {formatBudget(originalNode.metadata.budget)}</div>
               )}
-              {originalNode.metadata?.execution && (
-                <div className="whitespace-nowrap">支出: {formatBudget(originalNode.metadata.execution)}</div>
+              {originalNode.metadata?.spending && (
+                <div className="whitespace-nowrap">支出: {formatBudget(originalNode.metadata.spending)}</div>
               )}
               {originalNode.metadata?.differenceData && (
                 <div className="mt-2">
                   <div className="whitespace-nowrap">予算総計: {formatBudget(originalNode.metadata.differenceData.budgetTotal)}</div>
-                  <div className="whitespace-nowrap">支出総計: {formatBudget(originalNode.metadata.differenceData.executionTotal)}</div>
+                  <div className="whitespace-nowrap">支出総計: {formatBudget(originalNode.metadata.differenceData.spendingTotal ?? originalNode.metadata.differenceData.executionTotal)}</div>
                   <div className="font-bold mt-1 whitespace-nowrap">
                     差額: {formatBudget(originalNode.metadata.differenceData.difference)}
                   </div>
