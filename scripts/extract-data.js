@@ -31,6 +31,12 @@ if (!fs.existsSync(ARCHIVE_PATH)) {
   process.exit(1);
 }
 
+// Ensure public directory exists
+if (!fs.existsSync(PUBLIC_DIR)) {
+  console.log('Creating public directory...');
+  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+}
+
 try {
   // Extract tar.gz to public/
   execSync(`tar -xzf ${ARCHIVE_PATH} -C ${PUBLIC_DIR}`, { stdio: 'inherit' });
