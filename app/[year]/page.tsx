@@ -38,6 +38,23 @@ export default async function YearPage({ params }: Props) {
     loadPreprocessedStatistics(year),
   ]);
 
+  // yearly-project-expenditures.jsonから総支出と支出先数を計算
+  const fs = require('fs').promises;
+  const path = require('path');
+  const yearlyExpendituresPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'yearly-project-expenditures.json');
+  let totalExpenditure = 0;
+  let expenditureCount = 0;
+
+  try {
+    const yearlyExpendituresData = await fs.readFile(yearlyExpendituresPath, 'utf-8');
+    const yearlyExpenditures = JSON.parse(yearlyExpendituresData);
+    const projects = Object.values(yearlyExpenditures) as any[];
+    totalExpenditure = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
+    expenditureCount = projects.reduce((sum, p) => sum + (p.expenditures?.length || 0), 0);
+  } catch (error) {
+    console.error('Failed to load yearly-project-expenditures.json:', error);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -63,6 +80,12 @@ export default async function YearPage({ params }: Props) {
                   {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600 dark:text-gray-400">総支出:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                  {(totalExpenditure / 1000000000000).toFixed(1)}兆円
+                </span>
+              </div>
               {year === 2024 && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
@@ -73,7 +96,11 @@ export default async function YearPage({ params }: Props) {
               )}
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount}</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600 dark:text-gray-400">支出先数:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{expenditureCount.toLocaleString()}</span>
               </div>
             </div>
           </div>
