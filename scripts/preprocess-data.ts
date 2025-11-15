@@ -105,7 +105,7 @@ async function processYearData(year: Year) {
   );
 
   // 統計情報を計算
-  const statistics = calculateStatistics(budgetData, year);
+  const statistics = calculateStatistics(budgetData, expenditureData, year);
 
   // 府省庁リストを抽出
   const ministries = extractMinistries(budgetData, year);
@@ -1205,7 +1205,7 @@ function generateProjectExpendituresData(budgetData: any[], expenditureData: any
 /**
  * 統計情報を計算
  */
-function calculateStatistics(budgetData: any[], year: Year) {
+function calculateStatistics(budgetData: any[], expenditureData: any[], year: Year) {
   // 当初予算は予算年度=yearのデータを使用
   const currentYearBudgetData = budgetData.filter((budget) => {
     const budgetYear = budget.予算年度;
@@ -1273,12 +1273,50 @@ function calculateStatistics(budgetData: any[], year: Year) {
   const eventCount = new Set(currentYearBudgetData.map((item) => item.予算事業ID)).size;
   const ministryCount = new Set(currentYearBudgetData.map((item) => item.府省庁)).size;
 
+  // 支出先情報を計算
+  const currentYearExpenditureData = expenditureData.filter((exp) => {
+    const expYear = Number(exp.事業年度);
+    return expYear === year;
+  });
+
+  // 予算事業IDごとに支出先をグループ化
+  const projectExpenditureMap = new Map<string, Set<string>>();
+  currentYearExpenditureData.forEach((exp) => {
+    const projectId = exp.予算事業ID;
+    if (!projectId) return;
+
+    const expenditureName = exp.支出先名;
+    if (!expenditureName) return;
+
+    if (!projectExpenditureMap.has(projectId)) {
+      projectExpenditureMap.set(projectId, new Set());
+    }
+    projectExpenditureMap.get(projectId)!.add(expenditureName);
+  });
+
+  const totalExpenditure = currentYearExpenditureData.reduce(
+    (sum, item) => sum + normalizeAmount(item.金額 || item['支出額'] || 0, year),
+    0
+  );
+
+  const expenditureCount = currentYearExpenditureData.length;
+  const projectsWithExpenditures = projectExpenditureMap.size;
+  const projectsWithoutExpenditures = eventCount - projectsWithExpenditures;
+
+  console.log(`  - Total projects: ${eventCount}`);
+  console.log(`  - Projects with expenditures: ${projectsWithExpenditures}`);
+  console.log(`  - Projects without expenditures: ${projectsWithoutExpenditures}`);
+
   return {
     totalBudget,
     totalExecution,
+    totalExpenditure,
     averageExecutionRate,
     eventCount,
     ministryCount,
+    expenditureCount,
+    projectsWithExpenditures,
+    projectsWithoutExpenditures,
   };
 }
 
