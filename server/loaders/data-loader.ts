@@ -17,8 +17,8 @@ export async function loadSankeyDataForYear(
   const data = await getAllDataForYear(year);
 
   return transformToSankeyData(
-    data.expenditureInfo,
-    data.expenditureConnections,
+    data.spendingInfo,
+    data.spendingConnections,
     data.budgetSummary,
     options
   );

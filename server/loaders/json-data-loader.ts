@@ -3,7 +3,7 @@ import type { Year } from '@/types/rs-system';
 import type { SankeyData } from '@/types/sankey';
 import {
   getStatistics,
-  getProjectExpenditures,
+  getProjectSpendings,
 } from '../repositories/json-repository';
 
 /**
@@ -26,6 +26,6 @@ export async function loadPreprocessedStatistics(year: Year) {
 /**
  * 指定年度の事業別支出データを取得（事前処理済みJSON版、Nivo版モーダル用）
  */
-export async function loadPreprocessedProjectExpenditures(year: Year) {
-  return getProjectExpenditures(year);
+export async function loadPreprocessedProjectSpendings(year: Year) {
+  return getProjectSpendings(year);
 }

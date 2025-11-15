@@ -4,8 +4,8 @@ import fs from 'fs/promises';
 import type { Year } from '@/types/rs-system';
 import type {
   BudgetSummary,
-  ExpenditureInfo,
-  ExpenditureConnection,
+  SpendingInfo,
+  SpendingConnection,
 } from '@/types/rs-system';
 import { parseCSV } from '../lib/csv-parser';
 
@@ -56,19 +56,19 @@ export async function getBudgetSummary(year: Year): Promise<BudgetSummary[]> {
 /**
  * 支出先情報を取得
  */
-export async function getExpenditureInfo(year: Year): Promise<ExpenditureInfo[]> {
+export async function getSpendingInfo(year: Year): Promise<SpendingInfo[]> {
   const fileName = year === 2024
     ? `5-1_RS_${year}_支出先_支出情報.csv`
     : `5-1_${year}_支出先_支出情報.csv`;
 
   const filePath = getCSVFilePath(year, fileName);
-  return parseCSV<ExpenditureInfo>(filePath);
+  return parseCSV<SpendingInfo>(filePath);
 }
 
 /**
  * 支出ブロックのつながりデータを取得
  */
-export async function getExpenditureConnections(year: Year): Promise<ExpenditureConnection[]> {
+export async function getSpendingConnections(year: Year): Promise<SpendingConnection[]> {
   const fileName = year === 2024
     ? `5-2_RS_${year}_支出先_支出ブロックのつながり.csv`
     : null; // 2023年以前にはこのファイルが存在しない可能性がある
@@ -80,7 +80,7 @@ export async function getExpenditureConnections(year: Year): Promise<Expenditure
   const filePath = getCSVFilePath(year, fileName);
 
   try {
-    return await parseCSV<ExpenditureConnection>(filePath);
+    return await parseCSV<SpendingConnection>(filePath);
   } catch (error) {
     console.warn(`File not found or error reading: ${fileName}`);
     return [];
@@ -91,16 +91,16 @@ export async function getExpenditureConnections(year: Year): Promise<Expenditure
  * 指定年度の全データを取得
  */
 export async function getAllDataForYear(year: Year) {
-  const [budgetSummary, expenditureInfo, expenditureConnections] = await Promise.all([
+  const [budgetSummary, spendingInfo, spendingConnections] = await Promise.all([
     getBudgetSummary(year),
-    getExpenditureInfo(year),
-    getExpenditureConnections(year),
+    getSpendingInfo(year),
+    getSpendingConnections(year),
   ]);
 
   return {
     budgetSummary,
-    expenditureInfo,
-    expenditureConnections,
+    spendingInfo,
+    spendingConnections,
   };
 }
 

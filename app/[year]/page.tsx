@@ -38,21 +38,21 @@ export default async function YearPage({ params }: Props) {
     loadPreprocessedStatistics(year),
   ]);
 
-  // project-expenditures.jsonから総支出と支出先数を計算
+  // project-spendings.jsonから総支出と支出先数を計算
   const fs = require('fs').promises;
   const path = require('path');
-  const projectExpendituresPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'project-expenditures.json');
-  let totalExpenditure = 0;
-  let expenditureCount = 0;
+  const projectSpendingsPath = path.join(process.cwd(), 'public', 'data', `year_${year}`, 'project-spendings.json');
+  let totalSpending = 0;
+  let spendingCount = 0;
 
   try {
-    const projectExpendituresData = await fs.readFile(projectExpendituresPath, 'utf-8');
-    const projectExpenditures = JSON.parse(projectExpendituresData);
-    const projects = Object.values(projectExpenditures) as any[];
-    totalExpenditure = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
-    expenditureCount = projects.reduce((sum, p) => sum + (p.expenditures?.length || 0), 0);
+    const projectSpendingsData = await fs.readFile(projectSpendingsPath, 'utf-8');
+    const projectSpendings = JSON.parse(projectSpendingsData);
+    const projects = Object.values(projectSpendings) as any[];
+    totalSpending = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
+    spendingCount = projects.reduce((sum, p) => sum + (p.spendings?.length || 0), 0);
   } catch (error) {
-    console.error('Failed to load project-expenditures.json:', error);
+    console.error('Failed to load project-spendings.json:', error);
   }
 
   return (
@@ -60,9 +60,9 @@ export default async function YearPage({ params }: Props) {
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-base sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
                 行政事業レビュー
               </h1>
               <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
@@ -75,32 +75,18 @@ export default async function YearPage({ params }: Props) {
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600 dark:text-gray-400">執行額:</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">総支出:</span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  {(totalExpenditure / 1000000000000).toFixed(1)}兆円
+                  {(totalSpending / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
-              {year === 2024 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">
-                    {(statistics.averageExecutionRate * 100).toFixed(1)}%
-                  </span>
-                </div>
-              )}
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">支出先数:</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{expenditureCount.toLocaleString()}</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{spendingCount.toLocaleString()}</span>
               </div>
             </div>
           </div>

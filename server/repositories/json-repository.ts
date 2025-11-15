@@ -52,15 +52,15 @@ export async function getStatistics(year: Year) {
 /**
  * 事業別支出データを取得（Nivo版モーダル用）
  */
-export async function getProjectExpenditures(year: Year) {
-  const filePath = path.join(DATA_BASE_PATH, `year_${year}`, 'project-expenditures.json');
+export async function getProjectSpendings(year: Year) {
+  const filePath = path.join(DATA_BASE_PATH, `year_${year}`, 'project-spendings.json');
   return readJSON<Record<number, {
     projectId: number;
     projectName: string;
     budget: number;
-    top20Expenditures: Array<{ name: string; amount: number }>;
+    top20Spendings: Array<{ name: string; amount: number }>;
     othersTotal: number;
-    totalExpenditureAmount: number;
+    totalSpendingAmount: number;
     unknownAmount: number;
   }>>(filePath);
 }

@@ -21,13 +21,13 @@ export interface ProjectTimeSeriesData {
       executionRate?: number; // 執行率（0-1の小数）
     };
   };
-  topExpenditures: ExpenditureTimeSeries[]; // 支出先Top10の推移
+  topSpendings: SpendingTimeSeries[]; // 支出先Top10の推移
 }
 
 /**
  * 支出先の時系列データ
  */
-export interface ExpenditureTimeSeries {
+export interface SpendingTimeSeries {
   name: string; // 支出先名
   totalAmount: number; // 全年度累計金額（円）
   yearCount: number; // 支出があった年度数
@@ -35,15 +35,6 @@ export interface ExpenditureTimeSeries {
     // 年度別支出額
     [year: number]: number;
   };
-}
-
-/**
- * レポート表示用データ
- */
-export interface ProjectReportData {
-  project: ProjectTimeSeriesData;
-  budgetTrend: BudgetTrendPoint[];
-  expenditureTrend: ExpenditureGroupTrend[];
 }
 
 /**
@@ -59,12 +50,21 @@ export interface BudgetTrendPoint {
 /**
  * 支出先グループの推移データ
  */
-export interface ExpenditureGroupTrend {
-  expenditureName: string;
+export interface SpendingGroupTrend {
+  spendingName: string;
   data: Array<{
     year: Year;
     amount: number;
   }>;
+}
+
+/**
+ * レポート表示用データ
+ */
+export interface ProjectReportData {
+  project: ProjectTimeSeriesData;
+  budgetTrend: BudgetTrendPoint[];
+  spendingTrend: SpendingGroupTrend[];
 }
 
 /**

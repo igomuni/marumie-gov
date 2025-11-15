@@ -28,11 +28,11 @@ export const DEFAULT_SANKEY_CONFIG: SankeyConfig = {
   topProjectsCount: 20,
   topN: {
     mainTopProjects: 3,
-    mainTopExpenditures: 3,
+    mainTopSpendings: 3,
     ministryTopProjects: 10,
-    ministryTopExpenditures: 10,
-    projectTopExpenditures: 20,
-    expenditureTopProjects: 30,
+    ministryTopSpendings: 10,
+    projectTopSpendings: 20,
+    spendingTopProjects: 30,
   },
   ministryThreshold: 100000000000, // 1000億円
   ministryThresholdType: 'percentage',

@@ -15,17 +15,17 @@ interface Props {
   availableMinistries: string[];
 }
 
-interface ExpenditureDetail {
+interface SpendingDetail {
   projectId: number;
   ministry: string;
   projectName: string;
-  expenditureName: string;
+  spendingName: string;
   budget: number;
   execution: number;
-  expenditureCount?: number; // まとめた場合の支出先件数
+  spendingCount?: number; // まとめた場合の支出先件数
 }
 
-type SortColumn = 'ministry' | 'projectName' | 'expenditureName' | 'budget' | 'execution';
+type SortColumn = 'ministry' | 'projectName' | 'spendingName' | 'budget' | 'execution';
 type SortDirection = 'asc' | 'desc';
 
 export default function SankeyNodeDetailModal({
@@ -40,14 +40,14 @@ export default function SankeyNodeDetailModal({
 }: Props) {
   const [selectedMinistries, setSelectedMinistries] = useState<string[]>([]);
   const [groupByProject, setGroupByProject] = useState(true);
-  const [data, setData] = useState<ExpenditureDetail[]>([]);
+  const [data, setData] = useState<SpendingDetail[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>('execution');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [projectNameFilter, setProjectNameFilter] = useState('');
-  const [expenditureNameFilter, setExpenditureNameFilter] = useState('');
+  const [spendingNameFilter, setSpendingNameFilter] = useState('');
   // スマホでは初期状態を折り畳み、PCでは展開
   const [isFilterExpanded, setIsFilterExpanded] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -74,10 +74,8 @@ export default function SankeyNodeDetailModal({
       setSelectedMinistries(availableMinistries);
     }
 
-    // デフォルトのまとめフラグ
-    const isBudgetSide = nodeId.includes('budget') || nodeId === 'total_budget';
-    const isExecutionSide = nodeId.includes('execution') || nodeId === 'total_execution';
-    setGroupByProject(isBudgetSide || isExecutionSide);
+    // デフォルトのまとめフラグ（常にON）
+    setGroupByProject(true);
   }, [isOpen, nodeId, nodeType, nodeMetadata, availableMinistries]);
 
   // データ読み込み
@@ -88,14 +86,14 @@ export default function SankeyNodeDetailModal({
       setLoading(true);
       try {
         // 年度ごとの全プロジェクトの支出先データを読み込み
-        const response = await fetch(`/data/year_${year}/project-expenditures.json`);
-        const yearlyExpenditures = await response.json();
+        const response = await fetch(`/data/year_${year}/project-spendings.json`);
+        const yearlySpendings = await response.json();
 
         // データを展開
-        const details: ExpenditureDetail[] = [];
+        const details: SpendingDetail[] = [];
 
         // 選択された府省庁のプロジェクトのみを処理
-        Object.values(yearlyExpenditures).forEach((project: any) => {
+        Object.values(yearlySpendings).forEach((project: any) => {
           if (!selectedMinistries.includes(project.ministry)) return;
 
           if (groupByProject) {
@@ -104,22 +102,22 @@ export default function SankeyNodeDetailModal({
               projectId: project.projectId,
               ministry: project.ministry,
               projectName: project.projectName,
-              expenditureName: '', // まとめる場合は空
+              spendingName: '', // まとめる場合は空
               budget: project.budget || 0,
               execution: project.totalExecution || 0,
-              expenditureCount: project.expenditures?.length || 0,
+              spendingCount: project.spendings?.length || 0,
             });
           } else {
             // 支出先ごとに展開
-            if (project.expenditures) {
-              for (const exp of project.expenditures) {
+            if (project.spendings) {
+              for (const sp of project.spendings) {
                 details.push({
                   projectId: project.projectId,
                   ministry: project.ministry,
                   projectName: project.projectName,
-                  expenditureName: exp.name,
+                  spendingName: sp.name,
                   budget: project.budget || 0,
-                  execution: exp.amount || 0,
+                  execution: sp.amount || 0,
                 });
               }
             }
@@ -142,8 +140,8 @@ export default function SankeyNodeDetailModal({
     // テキストフィルタリング
     let filtered = data.filter((item) => {
       const matchProject = projectNameFilter === '' || item.projectName.toLowerCase().includes(projectNameFilter.toLowerCase());
-      const matchExpenditure = expenditureNameFilter === '' || item.expenditureName.toLowerCase().includes(expenditureNameFilter.toLowerCase());
-      return matchProject && matchExpenditure;
+      const matchSpending = spendingNameFilter === '' || item.spendingName.toLowerCase().includes(spendingNameFilter.toLowerCase());
+      return matchProject && matchSpending;
     });
 
     // ソート
@@ -160,9 +158,9 @@ export default function SankeyNodeDetailModal({
           aValue = a.projectName;
           bValue = b.projectName;
           break;
-        case 'expenditureName':
-          aValue = a.expenditureName || '';
-          bValue = b.expenditureName || '';
+        case 'spendingName':
+          aValue = a.spendingName || '';
+          bValue = b.spendingName || '';
           break;
         case 'budget':
           aValue = a.budget;
@@ -188,7 +186,7 @@ export default function SankeyNodeDetailModal({
     });
 
     return sorted;
-  }, [data, sortColumn, sortDirection, projectNameFilter, expenditureNameFilter]);
+  }, [data, sortColumn, sortDirection, projectNameFilter, spendingNameFilter]);
 
   // ソートハンドラー
   const handleSort = (column: SortColumn) => {
@@ -251,7 +249,7 @@ export default function SankeyNodeDetailModal({
 
     async function loadAllData() {
       try {
-        const response = await fetch(`/data/year_${year}/project-expenditures.json`);
+        const response = await fetch(`/data/year_${year}/project-spendings.json`);
         const data = await response.json();
         setAllYearlyData(data);
       } catch (error) {
@@ -263,18 +261,18 @@ export default function SankeyNodeDetailModal({
 
   // 全体統計（フィルター前）
   const overallStatistics = useMemo(() => {
-    if (!allYearlyData) return { totalBudget: 0, projectCount: 0, totalExecution: 0, expenditureCount: 0 };
+    if (!allYearlyData) return { totalBudget: 0, projectCount: 0, totalExecution: 0, spendingCount: 0 };
 
     const projects = Object.values(allYearlyData) as any[];
     const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
     const totalExecution = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
-    const expenditureCount = projects.reduce((sum, p) => sum + (p.expenditures?.length || 0), 0);
+    const spendingCount = projects.reduce((sum, p) => sum + (p.spendings?.length || 0), 0);
 
     return {
       totalBudget,
       projectCount: projects.length,
       totalExecution,
-      expenditureCount,
+      spendingCount,
     };
   }, [allYearlyData]);
 
@@ -283,15 +281,15 @@ export default function SankeyNodeDetailModal({
     const uniqueProjects = new Set(data.map((d) => d.projectId));
     const totalBudget = data.reduce((sum, d) => sum + d.budget, 0);
     const totalExecution = data.reduce((sum, d) => sum + d.execution, 0);
-    const expenditureCount = groupByProject
-      ? data.reduce((sum, d) => sum + (d.expenditureCount || 0), 0)
+    const spendingCount = groupByProject
+      ? data.reduce((sum, d) => sum + (d.spendingCount || 0), 0)
       : data.length;
 
     return {
       totalBudget,
       projectCount: uniqueProjects.size,
       totalExecution,
-      expenditureCount,
+      spendingCount,
     };
   }, [data, groupByProject]);
 
@@ -327,7 +325,7 @@ export default function SankeyNodeDetailModal({
             </div>
             <div>
               <span className="font-medium">支出先数: </span>
-              <span className="text-gray-900 dark:text-white">{overallStatistics.expenditureCount.toLocaleString()}</span>
+              <span className="text-gray-900 dark:text-white">{overallStatistics.spendingCount.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -428,8 +426,8 @@ export default function SankeyNodeDetailModal({
                 <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">支出先</label>
                 <input
                   type="text"
-                  value={expenditureNameFilter}
-                  onChange={(e) => setExpenditureNameFilter(e.target.value)}
+                  value={spendingNameFilter}
+                  onChange={(e) => setSpendingNameFilter(e.target.value)}
                   placeholder="支出先で検索"
                   disabled={groupByProject}
                   className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -469,9 +467,9 @@ export default function SankeyNodeDetailModal({
                     className={`px-4 py-2 text-left ${
                       groupByProject ? 'whitespace-nowrap' : ''
                     } ${groupByProject ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600'}`}
-                    onClick={() => !groupByProject && handleSort('expenditureName')}
+                    onClick={() => !groupByProject && handleSort('spendingName')}
                   >
-                    {groupByProject ? '支出先件数' : `支出先 ${getSortIndicator('expenditureName')}`}
+                    {groupByProject ? '支出先件数' : `支出先 ${getSortIndicator('spendingName')}`}
                   </th>
                   <th
                     className="px-4 py-2 text-right cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
@@ -497,8 +495,8 @@ export default function SankeyNodeDetailModal({
                     <td className="px-4 py-2">{item.projectName}</td>
                     <td className={`px-4 py-2 ${groupByProject ? 'whitespace-nowrap' : ''}`}>
                       {groupByProject
-                        ? `${item.expenditureCount || 0}件`
-                        : item.expenditureName}
+                        ? `${item.spendingCount || 0}件`
+                        : item.spendingName}
                     </td>
                     <td className="px-4 py-2 text-right whitespace-nowrap">{formatBudget(item.budget)}</td>
                     <td className="px-4 py-2 text-right whitespace-nowrap">{formatBudget(item.execution)}</td>
@@ -528,7 +526,7 @@ export default function SankeyNodeDetailModal({
               </div>
               <div>
                 <span className="font-medium">支出先数: </span>
-                <span className="text-gray-900 dark:text-white">{filteredStatistics.expenditureCount.toLocaleString()}</span>
+                <span className="text-gray-900 dark:text-white">{filteredStatistics.spendingCount.toLocaleString()}</span>
               </div>
             </div>
             <button

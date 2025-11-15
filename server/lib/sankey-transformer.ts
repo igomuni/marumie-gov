@@ -5,8 +5,8 @@ import type {
   SankeyLink,
 } from '@/types/sankey';
 import type {
-  ExpenditureInfo,
-  ExpenditureConnection,
+  SpendingInfo,
+  SpendingConnection,
   BudgetSummary,
 } from '@/types/rs-system';
 
@@ -14,8 +14,8 @@ import type {
  * 支出データをサンキー図用のデータに変換
  */
 export function transformToSankeyData(
-  expenditureInfo: ExpenditureInfo[],
-  expenditureConnections: ExpenditureConnection[],
+  spendingInfo: SpendingInfo[],
+  spendingConnections: SpendingConnection[],
   budgetSummary: BudgetSummary[],
   options?: {
     ministryFilter?: string;
@@ -32,9 +32,9 @@ export function transformToSankeyData(
   });
 
   // 府省庁でフィルタリング
-  let filteredConnections = expenditureConnections;
+  let filteredConnections = spendingConnections;
   if (options?.ministryFilter) {
-    filteredConnections = expenditureConnections.filter(
+    filteredConnections = spendingConnections.filter(
       conn => conn.府省庁 === options.ministryFilter
     );
   }
@@ -78,14 +78,14 @@ export function transformToSankeyData(
   // ステップ2: 支出情報から金額を取得してリンクを作成
   const linkMap = new Map<string, number>();
 
-  let filteredExpenditureInfo = expenditureInfo;
+  let filteredSpendingInfo = spendingInfo;
   if (options?.ministryFilter) {
-    filteredExpenditureInfo = expenditureInfo.filter(
+    filteredSpendingInfo = spendingInfo.filter(
       info => info.府省庁 === options.ministryFilter
     );
   }
 
-  filteredExpenditureInfo.forEach(info => {
+  filteredSpendingInfo.forEach(info => {
     const blockId = info.支出先ブロック番号;
     const amount = info.ブロックの合計支出額 || info.金額 || 0;
 
