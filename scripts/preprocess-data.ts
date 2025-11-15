@@ -1041,8 +1041,8 @@ function generateMinistryProjectsData(budgetData: any[], expenditureData: any[],
  * フォーマット: { projectKey: { ministry, projectName, budget, expenditures: [{name, amount}] } }
  */
 function generateYearlyProjectExpendituresData(budgetData: any[], expenditureData: any[], year: Year) {
-  // 全事業の予算データを集約（事業名をキーとする）
-  const projectsByName = new Map<string, { ministry: string; projectKey: string; budget: number; projectId: number }>();
+  // 全事業の予算データを集約（予算事業IDをキーとする - statistics.jsonとの整合性のため）
+  const projectsById = new Map<number, { ministry: string; projectName: string; budget: number }>();
 
   const currentYearBudgetData = budgetData.filter((budget) => budget.予算年度 === year);
 
@@ -1054,41 +1054,40 @@ function generateYearlyProjectExpendituresData(budgetData: any[], expenditureDat
 
     const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
 
-    if (projectsByName.has(projectName)) {
-      projectsByName.get(projectName)!.budget += budgetAmount;
+    if (projectsById.has(projectId)) {
+      // 同じIDの場合は予算を加算（通常は発生しないはずだが、念のため）
+      projectsById.get(projectId)!.budget += budgetAmount;
     } else {
-      projectsByName.set(projectName, {
+      projectsById.set(projectId, {
         ministry,
-        projectKey: generateProjectKey(projectName),
+        projectName,
         budget: budgetAmount,
-        projectId,
       });
     }
   });
 
-  // プロジェクトキーごとの結果オブジェクト
+  // プロジェクトIDごとの結果オブジェクト
   const result: Record<string, any> = {};
 
   // 全事業の支出先データを抽出
   const currentYearExpenditureData = expenditureData.filter((exp) => exp.事業年度 === year);
 
   currentYearExpenditureData.forEach((exp) => {
-    const projectName = exp.事業名;
-    if (!projectName) return;
+    const projectId = exp.予算事業ID;
+    if (!projectId) return;
 
-    const projectInfo = projectsByName.get(projectName);
+    const projectInfo = projectsById.get(projectId);
     if (!projectInfo) return;
 
-    const projectKey = projectInfo.projectKey;
     const expenditureName = exp.支出先名;
     const expenditureAmount = normalizeAmount(exp.金額 || exp['支出額（百万円）'] || 0, year);
 
     if (!expenditureName || !expenditureAmount) return;
 
-    if (!result[projectKey]) {
-      result[projectKey] = {
-        projectKey,
-        projectName,
+    if (!result[projectId]) {
+      result[projectId] = {
+        projectId,
+        projectName: projectInfo.projectName,
         ministry: projectInfo.ministry,
         budget: projectInfo.budget,
         expenditures: [] as Array<{ name: string; amount: number }>,
@@ -1096,11 +1095,11 @@ function generateYearlyProjectExpendituresData(budgetData: any[], expenditureDat
     }
 
     // 同じ支出先は金額を合算
-    const existing = result[projectKey].expenditures.find((e: any) => e.name === expenditureName);
+    const existing = result[projectId].expenditures.find((e: any) => e.name === expenditureName);
     if (existing) {
       existing.amount += expenditureAmount;
     } else {
-      result[projectKey].expenditures.push({ name: expenditureName, amount: expenditureAmount });
+      result[projectId].expenditures.push({ name: expenditureName, amount: expenditureAmount });
     }
   });
 
@@ -1108,6 +1107,20 @@ function generateYearlyProjectExpendituresData(budgetData: any[], expenditureDat
   Object.values(result).forEach((project: any) => {
     project.expenditures.sort((a: any, b: any) => b.amount - a.amount);
     project.totalExecution = project.expenditures.reduce((sum: number, exp: any) => sum + exp.amount, 0);
+  });
+
+  // 支出先データがない事業も追加
+  projectsById.forEach((projectInfo, projectId) => {
+    if (!result[projectId]) {
+      result[projectId] = {
+        projectId,
+        projectName: projectInfo.projectName,
+        ministry: projectInfo.ministry,
+        budget: projectInfo.budget,
+        expenditures: [],
+        totalExecution: 0,
+      };
+    }
   });
 
   return result;
