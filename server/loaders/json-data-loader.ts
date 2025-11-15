@@ -10,7 +10,7 @@ import {
  * 指定年度のNivo版サンキー図データを取得（トポロジーベース4列）
  */
 export async function loadPreprocessedSankeyTopologyData(year: Year): Promise<SankeyData> {
-  const path = `public/data/year_${year}/sankey-main-topology-nivo.json`;
+  const path = `public/data/year_${year}/sankey-main.json`;
   const fs = await import('fs/promises');
   const data = await fs.readFile(path, 'utf-8');
   return JSON.parse(data) as SankeyData;

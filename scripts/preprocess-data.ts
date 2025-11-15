@@ -108,7 +108,7 @@ async function processYearData(year: Year) {
   const statistics = calculateStatistics(budgetData, expenditureData, year);
 
   // 府省庁リストを抽出
-  const ministries = extractMinistries(budgetData, year);
+  const ministries = extractMinistries(budgetData, expenditureData, year);
 
   // 全プロジェクトの支出先データを生成（予算事業IDベース）
   const projectExpenditures = generateYearlyProjectExpendituresData(budgetData, expenditureData, year);
@@ -122,7 +122,7 @@ async function processYearData(year: Year) {
 
   await Promise.all([
     fs.writeFile(
-      path.join(outputDir, 'sankey-main-topology-nivo.json'),
+      path.join(outputDir, 'sankey-main.json'),
       JSON.stringify(sankeyTopologyDataNivo, null, 2)
     ),
     fs.writeFile(
@@ -1314,47 +1314,55 @@ function calculateStatistics(budgetData: any[], expenditureData: any[], year: Ye
 }
 
 /**
- * 府省庁リストを抽出（予算・執行額付き、予算金額降順ソート）
+ * 府省庁リストを抽出（予算・支出額付き、予算金額降順ソート）
  */
-function extractMinistries(budgetData: any[], year: Year): Array<{ name: string; budget: number; execution: number }> {
+function extractMinistries(budgetData: any[], expenditureData: any[], year: Year): Array<{ name: string; budget: number; expenditure: number }> {
   // 対象年度のデータのみをフィルター（予算）
   const currentYearBudgetData = budgetData.filter((budget) => {
     const budgetYear = budget.予算年度;
     return budgetYear === year;
   });
 
-  // 執行額用のデータをフィルター
-  const executionYearBudgetData = budgetData.filter((budget) => {
-    const budgetYear = budget.予算年度;
-    return year === 2024 ? budgetYear === year - 1 : budgetYear === year;
+  // 支出先データをフィルター
+  const currentYearExpenditureData = expenditureData.filter((exp) => {
+    const expYear = Number(exp.事業年度);
+    return expYear === year;
   });
 
-  // 府省庁ごとに予算と執行額を集約
-  const ministryData = new Map<string, { budget: number; execution: number }>();
+  // 府省庁ごとに予算と支出額を集約
+  const ministryData = new Map<string, { budget: number; expenditure: number }>();
 
   currentYearBudgetData.forEach((budget) => {
     const ministry = budget.府省庁;
     if (!ministry) return;
 
     const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
-    const current = ministryData.get(ministry) || { budget: 0, execution: 0 };
+    const current = ministryData.get(ministry) || { budget: 0, expenditure: 0 };
     current.budget += budgetAmount;
     ministryData.set(ministry, current);
   });
 
-  executionYearBudgetData.forEach((budget) => {
-    const ministry = budget.府省庁;
+  // 支出先データから府省庁ごとの支出額を集計
+  currentYearExpenditureData.forEach((exp) => {
+    const projectId = exp.予算事業ID;
+    if (!projectId) return;
+
+    // 予算事業IDから府省庁を取得
+    const budgetRecord = currentYearBudgetData.find((b) => b.予算事業ID === projectId);
+    if (!budgetRecord) return;
+
+    const ministry = budgetRecord.府省庁;
     if (!ministry) return;
 
-    const executionAmount = normalizeAmount(budget['執行額(合計)'] || budget['執行額（合計）'] || 0, year);
-    const current = ministryData.get(ministry) || { budget: 0, execution: 0 };
-    current.execution += executionAmount;
+    const expenditureAmount = normalizeAmount(exp.金額 || exp['支出額'] || 0, year);
+    const current = ministryData.get(ministry) || { budget: 0, expenditure: 0 };
+    current.expenditure += expenditureAmount;
     ministryData.set(ministry, current);
   });
 
   // 予算金額降順でソートして返す
   return Array.from(ministryData.entries())
-    .map(([name, data]) => ({ name, budget: data.budget, execution: data.execution }))
+    .map(([name, data]) => ({ name, budget: data.budget, expenditure: data.expenditure }))
     .sort((a, b) => b.budget - a.budget);
 }
 

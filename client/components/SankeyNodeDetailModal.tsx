@@ -442,6 +442,10 @@ export default function SankeyNodeDetailModal({
         <div className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">読み込み中...</div>
+          ) : selectedMinistries.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              表示対象なし
+            </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-[5] shadow-sm">
