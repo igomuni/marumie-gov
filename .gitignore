@@ -32,13 +32,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# preprocessed data (generated during build)
-# public/data/ is ~9MB (year_*/ + project-index.json) and can be committed
-# Note: public/data/projects/ (52MB, 12,573 files) is excluded below
-# but if you want to regenerate on each build, uncomment below:
-# /public/data/
+# preprocessed data (extracted from public_data.tar.gz during build)
+/public/data/
 
-# raw CSV data (939MB) - uncomment to exclude from git
+# raw CSV data (939MB)
 /data/
 
 # IDE
@@ -49,10 +46,6 @@ next-env.d.ts
 *.njsproj
 *.sln
 *.sw?
-
-# Generated project files (too many to commit, generated during build)
-public/data/projects/
-*.tar.gz
 
 # --- IGNORE ---
 docs/*ignore*
