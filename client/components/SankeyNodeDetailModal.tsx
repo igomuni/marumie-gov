@@ -55,6 +55,24 @@ export default function SankeyNodeDetailModal({
     }
     return true;
   });
+  // スマホ判定
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  // スマホ判定のリスナー
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // ノードタイプに応じた初期設定
   useEffect(() => {
@@ -84,6 +102,7 @@ export default function SankeyNodeDetailModal({
 
     async function loadData() {
       setLoading(true);
+      setData([]); // ローディング開始時にデータをクリアして、古いデータが表示されるのを防ぐ
       try {
         // 年度ごとの全プロジェクトの支出先データを読み込み
         const response = await fetch(`/data/year_${year}/project-spendings.json`);
@@ -109,7 +128,8 @@ export default function SankeyNodeDetailModal({
             });
           } else {
             // 支出先ごとに展開
-            if (project.spendings) {
+            if (project.spendings && project.spendings.length > 0) {
+              // 支出先がある場合：各支出先を展開
               for (const sp of project.spendings) {
                 details.push({
                   projectId: project.projectId,
@@ -120,6 +140,16 @@ export default function SankeyNodeDetailModal({
                   execution: sp.amount || 0,
                 });
               }
+            } else {
+              // 支出先がない場合：支出先なしとして1行追加
+              details.push({
+                projectId: project.projectId,
+                ministry: project.ministry,
+                projectName: project.projectName,
+                spendingName: '（支出先データなし）',
+                budget: project.budget || 0,
+                execution: 0,
+              });
             }
           }
         });
@@ -279,8 +309,20 @@ export default function SankeyNodeDetailModal({
   // フィルター後統計
   const filteredStatistics = useMemo(() => {
     const uniqueProjects = new Set(data.map((d) => d.projectId));
-    const totalBudget = data.reduce((sum, d) => sum + d.budget, 0);
+
+    // 予算額は重複を避けるため、プロジェクトIDごとに1回だけカウント
+    const projectBudgetMap = new Map<number, number>();
+    data.forEach((d) => {
+      if (!projectBudgetMap.has(d.projectId)) {
+        projectBudgetMap.set(d.projectId, d.budget);
+      }
+    });
+    const totalBudget = Array.from(projectBudgetMap.values()).reduce((sum, budget) => sum + budget, 0);
+
+    // 支出額の計算
     const totalExecution = data.reduce((sum, d) => sum + d.execution, 0);
+
+    // 支出先数の計算
     const spendingCount = groupByProject
       ? data.reduce((sum, d) => sum + (d.spendingCount || 0), 0)
       : data.length;
@@ -511,7 +553,7 @@ export default function SankeyNodeDetailModal({
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-2">
             {/* フィルター後統計 */}
-            <div className="flex gap-6 text-sm text-gray-600 dark:text-gray-400">
+            <div className={`flex ${isMobile ? 'gap-3 flex-wrap' : 'gap-6'} text-sm text-gray-600 dark:text-gray-400`}>
               <div>
                 <span className="font-medium">予算額: </span>
                 <span className="text-gray-900 dark:text-white">{formatBudget(filteredStatistics.totalBudget)}</span>
@@ -531,9 +573,14 @@ export default function SankeyNodeDetailModal({
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className={`${
+                isMobile
+                  ? 'w-10 h-10 flex items-center justify-center'
+                  : 'px-4 py-2'
+              } bg-blue-600 text-white rounded hover:bg-blue-700 flex-shrink-0`}
+              title="閉じる"
             >
-              閉じる
+              {isMobile ? '✕' : '閉じる'}
             </button>
           </div>
         </div>
