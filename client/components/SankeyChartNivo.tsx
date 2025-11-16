@@ -199,8 +199,8 @@ export default function SankeyChartNivo({ data, year }: Props) {
         theme={{
           labels: {
             text: {
-              fontSize: isMobile ? 10 : 12,
-              fontWeight: isMobile ? 600 : 400,
+              fontSize: 10,
+              fontWeight: 600,
             },
           },
         }}
