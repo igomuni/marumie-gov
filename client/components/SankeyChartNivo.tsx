@@ -116,6 +116,44 @@ export default function SankeyChartNivo({ data, year }: Props) {
     });
   };
 
+  // SVGレンダリング後にラベルの改行を処理
+  useEffect(() => {
+    if (!nivoData) return;
+
+    const timer = setTimeout(() => {
+      // SVG内の全てのテキスト要素を取得
+      const svgElement = document.querySelector('svg');
+      if (!svgElement) return;
+
+      const textElements = svgElement.querySelectorAll('text');
+      const processedParents = new Set();
+
+      textElements.forEach((textElement) => {
+        const text = textElement.textContent?.trim();
+        if (text && text.includes('|')) {
+          const [line1, line2] = text.split('|');
+          
+          // 親要素が既に処理されていないかチェック
+          if (processedParents.has(textElement)) return;
+          
+          // 元のテキスト要素を1行目に変更
+          textElement.textContent = line1;
+          
+          // 2行目用のtspan要素を追加
+          const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+          tspan.setAttribute('x', textElement.getAttribute('x') || '0');
+          tspan.setAttribute('dy', '1.2em');
+          tspan.textContent = line2;
+          textElement.appendChild(tspan);
+          
+          processedParents.add(textElement);
+        }
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [nivoData]);
+
   if (!isLoaded || loading || !nivoData) {
     return <div className="flex items-center justify-center h-[600px]">読み込み中...</div>;
   }
@@ -166,7 +204,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
             },
           },
         }}
-        // カスタムラベル（nivoDataから取得）
+        // カスタムラベル（ノード情報を含める）
         label={(node) => {
           const originalNode = nivoData.nodes.find((n: any) => n.id === node.id);
           if (!originalNode) return node.id;
@@ -174,20 +212,19 @@ export default function SankeyChartNivo({ data, year }: Props) {
           // ノードタイプに応じたラベル
           if (originalNode.type === 'total') {
             const value = originalNode.metadata?.budget || originalNode.metadata?.spending || 0;
-            return `${originalNode.name}\n${formatBudget(value)}`;
+            return `${originalNode.name}|${formatBudget(value)}`;
           }
 
           if (originalNode.type === 'difference') {
             const diff = originalNode.metadata?.differenceData?.difference || 0;
-            return `${originalNode.name}\n${formatBudget(diff)}`;
+            return `${originalNode.name}|${formatBudget(diff)}`;
           }
 
           if (originalNode.type === 'ministry') {
             const budget = originalNode.metadata?.budget || 0;
             const spending = originalNode.metadata?.spending || 0;
-            // 支出ノード（ministry_spending_*）の場合は支出金額を優先
             const value = originalNode.id.includes('spending') ? spending : budget;
-            return `${originalNode.name}\n${formatBudget(value)}`;
+            return `${originalNode.name}|${formatBudget(value)}`;
           }
 
           return originalNode.name;
