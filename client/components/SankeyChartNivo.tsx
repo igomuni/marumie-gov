@@ -34,7 +34,11 @@ export default function SankeyChartNivo({ data, year }: Props) {
 
   // Nivo形式のJSONを直接読み込み、色を設定（トポロジーベース版）
   useEffect(() => {
+    // 色設定が読み込まれていない場合は待機
+    if (!isLoaded) return;
+
     async function loadNivoData() {
+      setLoading(true);
       try {
         const response = await fetch(`/data/year_${year}/sankey-main.json`);
         const jsonData = await response.json();
@@ -65,7 +69,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
     }
 
     loadNivoData();
-  }, [year, data, config]);
+  }, [year, data, config, isLoaded]);
 
   // 利用可能な府省庁リストを取得（年度ごとのministries.jsonから）
   const [availableMinistries, setAvailableMinistries] = useState<string[]>([]);

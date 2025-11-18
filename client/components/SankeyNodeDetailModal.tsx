@@ -62,6 +62,9 @@ export default function SankeyNodeDetailModal({
     }
     return false;
   });
+  // ページネーション（支出先まとめOFF時のパフォーマンス対策）
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(1000); // 1ページあたり1000件
 
   // スマホ判定のリスナー
   useEffect(() => {
@@ -217,6 +220,21 @@ export default function SankeyNodeDetailModal({
 
     return sorted;
   }, [data, sortColumn, sortDirection, projectNameFilter, spendingNameFilter]);
+
+  // ページネーション用のデータ分割
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedData.slice(startIndex, endIndex);
+  }, [sortedData, currentPage, itemsPerPage]);
+
+  // 総ページ数
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+
+  // フィルタ変更時にページを1にリセット
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [projectNameFilter, spendingNameFilter, sortColumn, sortDirection, groupByProject]);
 
   // ソートハンドラー
   const handleSort = (column: SortColumn) => {
@@ -528,7 +546,7 @@ export default function SankeyNodeDetailModal({
                 </tr>
               </thead>
               <tbody>
-                {sortedData.map((item, idx) => (
+                {paginatedData.map((item, idx) => (
                   <tr
                     key={idx}
                     className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -546,6 +564,48 @@ export default function SankeyNodeDetailModal({
                 ))}
               </tbody>
             </table>
+
+            {/* ページネーション（1000件以上の場合のみ表示） */}
+            {totalPages > 1 && (
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {sortedData.length.toLocaleString()}件中 {((currentPage - 1) * itemsPerPage + 1).toLocaleString()} - {Math.min(currentPage * itemsPerPage, sortedData.length).toLocaleString()}件を表示
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    最初
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    前へ
+                  </button>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    次へ
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    最後
+                  </button>
+                </div>
+              </div>
+            )}
           )}
         </div>
 
