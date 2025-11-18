@@ -324,13 +324,13 @@ export default function SankeyNodeDetailModal({
     };
   }, [allYearlyData]);
 
-  // フィルター後統計
+  // フィルター後統計（テキストフィルタも考慮してsortedDataから計算）
   const filteredStatistics = useMemo(() => {
-    const uniqueProjects = new Set(data.map((d) => d.projectId));
+    const uniqueProjects = new Set(sortedData.map((d) => d.projectId));
 
     // 予算額は重複を避けるため、プロジェクトIDごとに1回だけカウント
     const projectBudgetMap = new Map<number, number>();
-    data.forEach((d) => {
+    sortedData.forEach((d) => {
       if (!projectBudgetMap.has(d.projectId)) {
         projectBudgetMap.set(d.projectId, d.budget);
       }
@@ -338,12 +338,12 @@ export default function SankeyNodeDetailModal({
     const totalBudget = Array.from(projectBudgetMap.values()).reduce((sum, budget) => sum + budget, 0);
 
     // 支出額の計算
-    const totalExecution = data.reduce((sum, d) => sum + d.execution, 0);
+    const totalExecution = sortedData.reduce((sum, d) => sum + d.execution, 0);
 
     // 支出先数の計算
     const spendingCount = groupByProject
-      ? data.reduce((sum, d) => sum + (d.spendingCount || 0), 0)
-      : data.length;
+      ? sortedData.reduce((sum, d) => sum + (d.spendingCount || 0), 0)
+      : sortedData.length;
 
     return {
       totalBudget,
@@ -351,7 +351,7 @@ export default function SankeyNodeDetailModal({
       totalExecution,
       spendingCount,
     };
-  }, [data, groupByProject]);
+  }, [sortedData, groupByProject]);
 
   if (!isOpen) return null;
 
@@ -508,25 +508,24 @@ export default function SankeyNodeDetailModal({
               表示対象なし
             </div>
           ) : (
-            <>
-              <table className="w-full text-sm">
+            <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-[5] shadow-sm">
                   <tr className="border-b-2 border-gray-300 dark:border-gray-600">
                     <th
-                      className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                      className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap w-32"
                       onClick={() => handleSort('ministry')}
                     >
                       府省庁 {getSortIndicator('ministry')}
                     </th>
                     <th
-                      className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 min-w-[300px]"
                       onClick={() => handleSort('projectName')}
                     >
                       事業名 {getSortIndicator('projectName')}
                     </th>
                     <th
                       className={`px-4 py-2 text-left ${
-                        groupByProject ? 'whitespace-nowrap' : ''
+                        groupByProject ? 'whitespace-nowrap w-28' : 'min-w-[250px]'
                       } ${groupByProject ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600'}`}
                       onClick={() => !groupByProject && handleSort('spendingName')}
                     >
@@ -565,51 +564,56 @@ export default function SankeyNodeDetailModal({
                   ))}
                 </tbody>
               </table>
-
-              {/* ページネーション（1000件以上の場合のみ表示） */}
-              {totalPages > 1 && (
-                <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {sortedData.length.toLocaleString()}件中 {((currentPage - 1) * itemsPerPage + 1).toLocaleString()} - {Math.min(currentPage * itemsPerPage, sortedData.length).toLocaleString()}件を表示
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      最初
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      前へ
-                    </button>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {currentPage} / {totalPages}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      次へ
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      最後
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
           )}
         </div>
+
+        {/* ページネーション（1000件以上の場合のみ表示） */}
+        {!loading && selectedMinistries.length > 0 && totalPages > 1 && (
+          <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 bg-white dark:bg-gray-800">
+            <div className="flex flex-row items-center justify-between gap-2">
+              <div className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap h-8 flex items-center flex-shrink-0">
+                {((currentPage - 1) * itemsPerPage + 1).toLocaleString()}-{Math.min(currentPage * itemsPerPage, sortedData.length).toLocaleString()} / {sortedData.length.toLocaleString()}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="w-8 h-8 flex items-center justify-center text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  title="最初"
+                >
+                  «
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="w-8 h-8 flex items-center justify-center text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  title="前へ"
+                >
+                  ‹
+                </button>
+                <span className="text-xs text-gray-700 dark:text-gray-300 px-2 whitespace-nowrap h-8 flex items-center">
+                  {currentPage}/{totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="w-8 h-8 flex items-center justify-center text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  title="次へ"
+                >
+                  ›
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="w-8 h-8 flex items-center justify-center text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                  title="最後"
+                >
+                  »
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* フッター */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
