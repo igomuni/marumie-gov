@@ -508,104 +508,106 @@ export default function SankeyNodeDetailModal({
               表示対象なし
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-[5] shadow-sm">
-                <tr className="border-b-2 border-gray-300 dark:border-gray-600">
-                  <th
-                    className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
-                    onClick={() => handleSort('ministry')}
-                  >
-                    府省庁 {getSortIndicator('ministry')}
-                  </th>
-                  <th
-                    className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                    onClick={() => handleSort('projectName')}
-                  >
-                    事業名 {getSortIndicator('projectName')}
-                  </th>
-                  <th
-                    className={`px-4 py-2 text-left ${
-                      groupByProject ? 'whitespace-nowrap' : ''
-                    } ${groupByProject ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600'}`}
-                    onClick={() => !groupByProject && handleSort('spendingName')}
-                  >
-                    {groupByProject ? '支出先件数' : `支出先 ${getSortIndicator('spendingName')}`}
-                  </th>
-                  <th
-                    className="px-4 py-2 text-right cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
-                    onClick={() => handleSort('budget')}
-                  >
-                    予算 {getSortIndicator('budget')}
-                  </th>
-                  <th
-                    className="px-4 py-2 text-right cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
-                    onClick={() => handleSort('execution')}
-                  >
-                    支出 {getSortIndicator('execution')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="px-4 py-2 whitespace-nowrap">{item.ministry}</td>
-                    <td className="px-4 py-2">{item.projectName}</td>
-                    <td className={`px-4 py-2 ${groupByProject ? 'whitespace-nowrap' : ''}`}>
-                      {groupByProject
-                        ? `${item.spendingCount || 0}件`
-                        : item.spendingName}
-                    </td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">{formatBudget(item.budget)}</td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">{formatBudget(item.execution)}</td>
+            <>
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-[5] shadow-sm">
+                  <tr className="border-b-2 border-gray-300 dark:border-gray-600">
+                    <th
+                      className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                      onClick={() => handleSort('ministry')}
+                    >
+                      府省庁 {getSortIndicator('ministry')}
+                    </th>
+                    <th
+                      className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => handleSort('projectName')}
+                    >
+                      事業名 {getSortIndicator('projectName')}
+                    </th>
+                    <th
+                      className={`px-4 py-2 text-left ${
+                        groupByProject ? 'whitespace-nowrap' : ''
+                      } ${groupByProject ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                      onClick={() => !groupByProject && handleSort('spendingName')}
+                    >
+                      {groupByProject ? '支出先件数' : `支出先 ${getSortIndicator('spendingName')}`}
+                    </th>
+                    <th
+                      className="px-4 py-2 text-right cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                      onClick={() => handleSort('budget')}
+                    >
+                      予算 {getSortIndicator('budget')}
+                    </th>
+                    <th
+                      className="px-4 py-2 text-right cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                      onClick={() => handleSort('execution')}
+                    >
+                      支出 {getSortIndicator('execution')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedData.map((item, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <td className="px-4 py-2 whitespace-nowrap">{item.ministry}</td>
+                      <td className="px-4 py-2">{item.projectName}</td>
+                      <td className={`px-4 py-2 ${groupByProject ? 'whitespace-nowrap' : ''}`}>
+                        {groupByProject
+                          ? `${item.spendingCount || 0}件`
+                          : item.spendingName}
+                      </td>
+                      <td className="px-4 py-2 text-right whitespace-nowrap">{formatBudget(item.budget)}</td>
+                      <td className="px-4 py-2 text-right whitespace-nowrap">{formatBudget(item.execution)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-            {/* ページネーション（1000件以上の場合のみ表示） */}
-            {totalPages > 1 && (
-              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {sortedData.length.toLocaleString()}件中 {((currentPage - 1) * itemsPerPage + 1).toLocaleString()} - {Math.min(currentPage * itemsPerPage, sortedData.length).toLocaleString()}件を表示
+              {/* ページネーション（1000件以上の場合のみ表示） */}
+              {totalPages > 1 && (
+                <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {sortedData.length.toLocaleString()}件中 {((currentPage - 1) * itemsPerPage + 1).toLocaleString()} - {Math.min(currentPage * itemsPerPage, sortedData.length).toLocaleString()}件を表示
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      最初
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      前へ
+                    </button>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      次へ
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      最後
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    最初
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    前へ
-                  </button>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    次へ
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    最後
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
+            </>
           )}
         </div>
 
